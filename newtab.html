@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>学区宝解密工具</title>
+        <link rel="stylesheet" type="text/css" href="css/styles/dark.css"/>
+        <style>
+            body {
+                margin: 0;
+            }
+            .main_wrap {
+                padding: 50px 30px;
+                background-color: #f1f1f1;
+                width: 100vw;
+                min-height: 100vh;
+                box-sizing: border-box;
+            }
+            .text-area {
+                width: 400px;
+                margin-bottom: 20px;
+                text-align: left;
+                padding: 10px;
+                box-sizing: border-box;
+                display: block;
+            }
+            .btn {
+                height: 40px;
+                line-height: 40px;
+                width: 80px;
+                margin: 0px 320px 20px;
+                display: block;
+                color: #000;
+                font-weight: bold;
+                text-align: center;
+            }
+            .title {
+                font-size: 16px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            .code_wrap {
+                width: 600px;
+                min-height: 400px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="main_wrap">
+            <div class="title">签名字符串</div>
+            <textarea 
+                class="text-area"
+                rows="10" 
+                id="sign" 
+                placeholder="请输入签名字符串......"></textarea>
+            <div class="title">加密字符串</div>
+            <textarea 
+                class="text-area"
+                rows="10"  
+                id="encrypt"
+                placeholder="请输入解密字符串......"></textarea>
+            <button class="btn" id="btn">解码</button>
+            <div class="title">解码内容</div>
+            <pre class="code_wrap">
+                <code id="code" class="json">
+                    解密JSON
+                </code>
+            </pre>
+        </div>
+    </body>
+    <!-- 引入jq -->
+    <script type="text/javascript" src="js/jquery-1.8.3.js"></script>
+    <script type="text/javascript" src="js/jsonFormat.js"></script>
+    <script type="text/javascript" src="js/highlight.pack.js"></script>
+    <script type="text/javascript" src="js/jsencrypt.js"></script>
+    <script type="text/javascript" src="js/crypto-js/core.js"></script>
+    <script type="text/javascript" src="./newtab.js"></script>
+</html>
