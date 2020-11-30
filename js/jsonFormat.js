@@ -1,75 +1,226 @@
 (function(window, undefined) {
-    function repeat(s, count) {
-        return new Array(count + 1).join(s);
+    function JsonFormatter(opt) {
+        this.options = this.extend({}, {
+            dom: '',
+            tabSize: 2,
+            singleTab: "  ",
+            quoteKeys: true,
+            imgCollapsed: "data:image/gif;base64, R0lGODlhHAALAMQAAP////7++/z8/Pb29fb18PHx7e/w6/Hw6e3s5unp4+jm2ODg3t3a0dnVy9bQxtLMv8zJurDC1L+9sMK4p32buDMzMwAAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEHABcALAAAAAAcAAsAAAVU4CWOZGmeV0StLBWhsEgBdA1QMUwJvMUTuNyJMihaBodFUFiiECxQKGMpqlSq14uVRCkUEJbEokHVZrdmrqLRsDgekDLzQoFIJni8nKlqrV5zgYIhADs=",
+            imgExpanded: "data:image/gif;base64, R0lGODlhHAALAMQAAP////7++/z8/Pb29fb18PHx7e/w6/Hw6e3s5unp4+Dg3t3a0djY0dnVy9fTxNbQxtLMv8zJurDC1L+9sMK4p32buAAAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEHABcALAAAAAAcAAsAAAVL4CWOZGmel1StbCWhsFgBdA1UMVwJQd8TuNypMigWD4qgsFQhWJ7PhXI5qhQKCERC0ZhSLxUFo+FwQCJeagUyobjd6aWqtXp979QQADs=",
+            isCollapsible: true
+        }, opt);
+
+
+        this.isFormated = false;
+        this.obj = {
+            _dateObj: new Date(),
+            _regexpObj: new RegExp()
+        };
+        this.init();
     }
-
-    function formatJson(json) {
-
-        var i           = 0,
-            len          = 0,
-            tab         = "    ",
-            targetJson     = "",
-            indentLevel = 0,
-            inString    = false,
-            currentChar = null;
-
-
-        for (i = 0, len = json.length; i < len; i += 1) { 
-            currentChar = json.charAt(i);
-
-            switch (currentChar) {
-            case '{': 
-            case '[': 
-                if (!inString) { 
-                    targetJson += currentChar + "\n" + repeat(tab, indentLevel + 1);
-                    indentLevel += 1; 
-                } else { 
-                    targetJson += currentChar; 
+    JsonFormatter.prototype = {
+        init: function() {
+            this.tab = this.multiplyString(this.options.tabSize, this.options.singleTab);
+        },
+        doFormat: function(json) {
+            var html;
+            var obj;
+            try {
+                if (typeof json == 'object') {
+                    obj = [json];
+                } else {
+                    if (json == "") {
+                        json = "\"\"";
+                    }
+                    obj = eval("[" + json + "]");
                 }
-                break; 
-            case '}': 
-            case ']': 
-                if (!inString) { 
-                    indentLevel -= 1; 
-                    targetJson += "\n" + repeat(tab, indentLevel) + currentChar; 
-                } else { 
-                    targetJson += currentChar; 
-                } 
-                break; 
-            case ',': 
-                if (!inString) { 
-                    targetJson += ",\n" + repeat(tab, indentLevel); 
-                } else { 
-                    targetJson += currentChar; 
-                } 
-                break; 
-            case ':': 
-                if (!inString) { 
-                    targetJson += ": "; 
-                } else { 
-                    targetJson += currentChar; 
-                } 
-                break; 
-            case ' ':
-            case "\n":
-            case "\t":
-                if (inString) {
-                    targetJson += currentChar;
-                }
-                break;
-            case '"': 
-                if (i > 0 && json.charAt(i - 1) !== '\\') {
-                    inString = !inString; 
-                }
-                targetJson += currentChar; 
-                break;
-            default: 
-                targetJson += currentChar; 
-                break;                    
-            } 
-        } 
-        return targetJson;
-    }
+                html = this.ProcessObject(obj[0], 0, false, false, false);
+                this.options.dom.innerHTML = "<pre class='jf-CodeContainer'>" + html + "</pre>";
+                this.isFormated = true;
+                this.bindEvent();
+            } catch (e) {
+                alert("JSON数据格式不正确:\n" + e.message);
+                this.options.dom.innerHTML = ''
+                this.isFormated = false;
+            }
+        },
+        extend: function(out) {
+            out = out || {};
 
-    window.formatJson = formatJson;
+            for (var i = 1; i < arguments.length; i++) {
+                if (!arguments[i])
+                    continue;
+
+                for (var key in arguments[i]) {
+                    if (arguments[i].hasOwnProperty(key))
+                        out[key] = arguments[i][key];
+                }
+            }
+
+            return out;
+        },
+        bindEvent: function() {
+            const that = this;
+            var elements = document.getElementsByClassName('imgToggle');
+
+            Array.prototype.forEach.call(elements, function(el, i) {
+                el.addEventListener('click', function() {
+                    if (that.isFormated == false) {
+                        return;
+                    }
+
+                    that.makeContentVisible(this.parentNode.nextElementSibling, !parseInt(this.getAttribute('data-status')));
+                });
+            });
+        },
+        expandAll: function() {
+            if (this.isFormated == false) {
+                return;
+            }
+            var that = this;
+            this.traverseChildren(this.options.dom, function(element) {
+                if (element.classList.contains('jf-collapsible')) {
+                    that.makeContentVisible(element, true);
+                }
+            }, 0);
+        },
+        collapseAll: function() {
+            if (this.isFormated == false) {
+                return;
+            }
+            var that = this;
+            this.traverseChildren(this.options.dom, function(element) {
+                if (element.classList.contains('jf-collapsible')) {
+                    that.makeContentVisible(element, false);
+                }
+            }, 0);
+        },
+        collapseLevel: function(level) {
+            if (this.isFormated == false) {
+                return;
+            }
+            var that = this;
+            this.traverseChildren(this.options.dom, function(element, depth) {
+                if (element.classList.contains('jf-collapsible')) {
+                    if (depth >= level) {
+                        that.makeContentVisible(element, false);
+                    } else {
+                        that.makeContentVisible(element, true);
+                    }
+                }
+            }, 0);
+
+        },
+        isArray: function(obj) {
+            return obj &&
+                typeof obj === 'object' &&
+                typeof obj.length === 'number' && !(obj.propertyIsEnumerable('length'));
+        },
+        getRow: function(indent, data, isPropertyContent) {
+            var tabs = "";
+            if (!isPropertyContent) {
+                tabs = this.multiplyString(indent, this.tab);
+            }
+            if (data != null && data.length > 0 && data.charAt(data.length - 1) != "\n") {
+                data = data + "\n";
+            }
+            return tabs + data;
+        },
+        formatLiteral: function(literal, quote, comma, indent, isArray, style) {
+            if (typeof literal == 'string') {
+                literal = literal.split("<").join("&lt;").split(">").join("&gt;");
+            }
+            var str = "<span class='jf-" + style + "'>" + quote + literal + quote + comma + "</span>";
+            if (isArray) str = this.getRow(indent, str);
+            return str;
+        },
+        formatFunction: function(indent, obj) {
+            var tabs;
+            var i;
+            var funcStrArray = obj.toString().split("\n");
+            var str = "";
+            tabs = this.multiplyString(indent, this.tab);
+            for (i = 0; i < funcStrArray.length; i++) {
+                str += ((i == 0) ? "" : tabs) + funcStrArray[i] + "\n";
+            }
+            return str;
+        },
+        multiplyString: function(num, str) {
+            var result = '';
+            for (var i = 0; i < num; i++) {
+                result += str;
+            }
+            return result;
+        },
+        traverseChildren: function(element, func, depth) {
+            var length = element.children.length;
+            for (var i = 0; i < length; i++) {
+                this.traverseChildren(element.children[i], func, depth + 1);
+            }
+            func(element, depth);
+        },
+        makeContentVisible: function(element, visible) {
+            var img = element.previousElementSibling.querySelectorAll('img')[0];
+            if (visible) {
+                element.style.display = '';
+                img.setAttribute('src', this.options.imgExpanded);
+                img.setAttribute('data-status', 1);
+            } else {
+                element.style.display = 'none';
+                img.setAttribute('src', this.options.imgCollapsed);
+                img.setAttribute('data-status', 0);
+            }
+        },
+        ProcessObject: function(obj, indent, addComma, isArray, isPropertyContent) {
+            var html = "";
+            var comma = (addComma) ? "<span class='jf-Comma'>,</span> " : "";
+            var type = typeof obj;
+            var clpsHtml = "";
+            var prop;
+            if (this.isArray(obj)) {
+                if (obj.length == 0) {
+                    html += this.getRow(indent, "<span class='jf-ArrayBrace'>[ ]</span>" + comma, isPropertyContent);
+                } else {
+                    clpsHtml = this.options.isCollapsible ? "<span><img class='imgToggle' data-status='1' src='" + this.options.imgExpanded + "'/></span><span class='jf-collapsible'>" : "";
+                    html += this.getRow(indent, "<span class='jf-ArrayBrace'>[</span>" + clpsHtml, isPropertyContent);
+                    for (var i = 0; i < obj.length; i++) {
+                        html += this.ProcessObject(obj[i], indent + 1, i < (obj.length - 1), true, false);
+                    }
+                    clpsHtml = this.options.isCollapsible ? "</span>" : "";
+                    html += this.getRow(indent, clpsHtml + "<span class='jf-ArrayBrace'>]</span>" + comma);
+                }
+            } else if (type == 'object') {
+                if (obj == null) {
+                    html += this.formatLiteral("null", "", comma, indent, isArray, "Null");
+                } else {
+                    var numProps = 0;
+                    for (prop in obj) numProps++;
+                    if (numProps == 0) {
+                        html += this.getRow(indent, "<span class='jf-ObjectBrace'>{ }</span>" + comma, isPropertyContent);
+                    } else {
+                        clpsHtml = this.options.isCollapsible ? "<span><img class='imgToggle' data-status='1' src='" + this.options.imgExpanded + "'/></span><span class='jf-collapsible'>" : "";
+                        html += this.getRow(indent, "<span class='jf-ObjectBrace'>{</span>" + clpsHtml, isPropertyContent);
+                        var j = 0;
+                        for (prop in obj) {
+                            var quote = this.options.quoteKeys ? "\"" : "";
+                            html += this.getRow(indent + 1, "<span class='jf-PropertyName'>" + quote + prop + quote + "</span>: " + this.ProcessObject(obj[prop], indent + 1, ++j < numProps, false, true));
+                        }
+                        clpsHtml = this.options.isCollapsible ? "</span>" : "";
+                        html += this.getRow(indent, clpsHtml + "<span class='jf-ObjectBrace'>}</span>" + comma);
+                    }
+                }
+            } else if (type == 'number') {
+                html += this.formatLiteral(obj, "", comma, indent, isArray, "Number");
+            } else if (type == 'boolean') {
+                html += this.formatLiteral(obj, "", comma, indent, isArray, "Boolean");
+            } else if (type == 'undefined') {
+                html += this.formatLiteral("undefined", "", comma, indent, isArray, "Null");
+            } else {
+                html += this.formatLiteral(obj.toString().split("\\").join("\\\\").split('"').join('\\"'), "\"", comma, indent, isArray, "String");
+            }
+            return html;
+        }
+    };
+
+    window.JsonFormatter = JsonFormatter;
 })(window)

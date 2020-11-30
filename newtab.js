@@ -1,6 +1,3 @@
-$(function() {
-    hljs.initHighlightingOnLoad();
-})
 
 $('#btn').click(e => {
 
@@ -61,16 +58,11 @@ hJFrpo11kSywEHFxsJebZRTPKL6d+5Xs7RUcK5nzDRA=
     var encryptString = uncrypted.replace(/^[0-9]*:/g, '');
     console.log(encryptString)
 
-    // var decrypt = decryptData(encryptString, $('#encrypt').val())
-    $('#code').html(`
-    {
-        "age":28,
-        "name": "lisi",
-        "sex": "male",
-        "hobby": {
-           "nianling": 20
-        }  
-    }
-    `)
+    var decrypt = decryptData(encryptString, $('#encrypt').val())
 
+    var options = {
+        dom : $('#code')[0]
+    };
+    var jf = new JsonFormatter(options); //创建对象
+    jf.doFormat(decrypt); //格式化json
 });
