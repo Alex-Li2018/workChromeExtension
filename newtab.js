@@ -19,10 +19,11 @@ $('#btn').click(e => {
     }
 
     function decryptData(signStr, data) {
-        const decryptd = decryptByAES(data, signStr);
+        let decryptd = decryptByAES(data, signStr);
     
         if (!decryptd || typeof decryptd !== 'string') {
-            throw new Error('数据解密失败');
+            decryptd = decryptByAES(data, 'default_encrypt_key');
+           console.error('数据解密失败,使用默认字符串解密');
         }
     
         let result = {};
