@@ -44,6 +44,17 @@
                 width: 600px;
                 min-height: 400px;
             }
+            .sub-title,.radio {
+                font-size: 14px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            .radio-group_wrap {
+                display: flex;
+            }
+            .radio:last-of-type {
+                margin-left: 20px;
+            }
         </style>
         <style>
             /* CSS Document */
@@ -84,6 +95,12 @@
     </head>
     <body>
         <div class="main_wrap">
+            <div class="sub-title">请选择环境:</div>
+            <div class="radio-group_wrap">
+                <input class="radio" checked="checked" type="radio" name="env" value="dev">dev
+                <br>
+                <input class="radio" type="radio" name="env" value="prod">prod
+            </div>
             <div class="title">签名字符串</div>
             <textarea 
                 class="text-area"
